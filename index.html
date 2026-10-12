@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مار مست</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b0b0b;
+    --bg-2: #232323;
+    --panel: #1c1c1c;
+    --amber: #f2a93b;
+    --neon: #ff4f7b;
+    --snake: #7bd66a;
+    --text: #f7e6cf;
+    --muted: #b79b7d;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0; min-height: 100%;
+    background: radial-gradient(ellipse at 50% 0%, var(--bg-2), var(--bg) 70%) var(--bg);
+    color: var(--text);
+    font-family: "Vazirmatn", Tahoma, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 16px 12px 28px;
+    overflow-x: hidden;
+  }
+  h1 {
+    margin: 4px 0 2px; font-weight: 900; font-size: clamp(2rem, 7vw, 3rem);
+    color: var(--amber);
+    text-shadow: 0 0 6px rgba(255,79,123,.9), 0 0 22px rgba(255,79,123,.5);
+    letter-spacing: 0;
+  }
+  .sub { margin: 0 0 14px; color: var(--muted); font-size: .95rem; text-align: center; }
+  .hud { display: flex; gap: 10px; width: min(92vw, 440px); margin-bottom: 10px; align-items: stretch; }
+  .stat { flex: 1; background: var(--panel); border: 1px solid #4a2f18; border-radius: 10px; padding: 6px 10px; }
+  .stat b { display: block; font-size: 1.25rem; color: var(--amber); }
+  .stat span { font-size: .78rem; color: var(--muted); }
+  .meter { flex: 1.6; }
+  .bar { height: 12px; background: #1a0f0a; border-radius: 6px; overflow: hidden; margin-top: 6px; border: 1px solid #4a2f18; }
+  .bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #f2a93b, #ff4f7b); transition: width .15s; }
+  #breath { background: linear-gradient(90deg, #3aa0ff, #8fe3ff); }
+  .stage { position: relative; width: min(92vw, 440px); aspect-ratio: 1; touch-action: none; }
+  canvas { width: 100%; height: 100%; display: block; border-radius: 14px; border: 3px solid #ededed; background: #111; transition: filter .3s; }
+  .overlay {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; background: rgba(20,10,5,.82); border-radius: 14px; text-align: center; padding: 18px;
+  }
+  .overlay.hide { display: none; }
+  .shop { justify-content: flex-start; overflow-y: auto; gap: 8px; padding: 12px; background: rgba(14,14,14,.94); }
+  .shop .head { display: flex; width: 100%; justify-content: space-between; align-items: center; }
+  .shop .head h2 { font-size: 1.3rem; }
+  .shop small { color: var(--muted); }
+  .row { display: flex; align-items: center; gap: 10px; width: 100%; background: var(--panel); border: 1px solid #3a3a3a; border-radius: 12px; padding: 6px 10px; }
+  .row canvas { width: 96px; height: 40px; border: 0; border-radius: 8px; flex: none; }
+  .row .nm { flex: 1; text-align: right; font-weight: 700; }
+  .row button { font-size: .85rem; padding: 6px 12px; }
+  button.go:disabled { opacity: .5; cursor: default; }
+  button.go.alt { background: #e9e9e9; }
+  .overlay h2 { margin: 0; font-size: 1.6rem; color: var(--amber); }
+  .overlay p { margin: 0; color: var(--text); line-height: 1.9; font-size: .95rem; }
+  button.go {
+    font: inherit; font-weight: 700; font-size: 1.05rem; color: #2a1208; background: var(--amber);
+    border: 0; border-radius: 12px; padding: 10px 28px; cursor: pointer;
+  }
+  button.go:hover { background: #ffc15e; }
+  button:focus-visible { outline: 3px solid var(--neon); outline-offset: 2px; }
+  .status { height: 1.6em; margin: 10px 0 2px; color: var(--neon); font-weight: 700; font-size: .95rem; text-align: center; }
+  .pad { display: grid; grid-template-columns: repeat(3, 62px); grid-template-rows: repeat(2, 54px); gap: 6px; margin-top: 8px; direction: ltr; }
+  .pad button {
+    font-size: 1.4rem; background: var(--panel); color: var(--amber); border: 1px solid #5b3820; border-radius: 12px; cursor: pointer;
+  }
+  .pad button:active { background: #4a2f18; }
+  .pad .up { grid-column: 2; grid-row: 1; }
+  .pad .left { grid-column: 1; grid-row: 2; }
+  .pad .down { grid-column: 2; grid-row: 2; }
+  .pad .right { grid-column: 3; grid-row: 2; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 14px; color: var(--muted); font-size: .85rem; }
+  .foot { margin-top: 12px; color: var(--muted); font-size: .78rem; text-align: center; }
+  @media (prefers-reduced-motion: reduce) { canvas { transition: none; } }
+</style>
+</head>
+<body>
+  <h1>مار مست</h1>
+  <p class="sub">ویسکی بخور، سیگار بکش، ولی زیر مستی از هوش نرو!</p>
+
+  <div class="hud">
+    <div class="stat"><span>امتیاز</span><b id="score">۰</b></div>
+    <div class="stat"><span>رکورد</span><b id="best">۰</b></div>
+    <div class="stat meter"><span>مستی</span><div class="bar"><i id="drunk"></i></div><span>نفس</span><div class="bar"><i id="breath" style="width:100%"></i></div></div>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="c" width="400" height="400" aria-label="صفحه بازی"></canvas>
+    <div class="overlay shop hide" id="shop">
+      <div class="head"><h2>🛍 فروشگاه</h2><span>🪙 <b id="coins">۰</b></span></div>
+      <small>هر امتیاز بازی = ۱ سکه (بعد از پایان بازی)</small>
+      <div id="list" style="width:100%;display:flex;flex-direction:column;gap:8px"></div>
+      <button class="go alt" id="backBtn">بازگشت</button>
+    </div>
+    <div class="overlay" id="ov">
+      <h2 id="ovTitle">آماده‌ای؟</h2>
+      <p id="ovText">با جهت‌نما، WASD یا کشیدن انگشت حرکت کن.<br>🥃 مستی و امتیاز می‌دهد، 🚬 امتیاز می‌دهد ولی نفس را کم و مار را کندتر می‌کند، 💧 هوشیارت می‌کند.<br>اگر مستی به ۱۰۰٪ برسد، مار از هوش می‌رود!</p>
+      <button class="go" id="startBtn">شروع بازی</button>
+      <button class="go alt" id="shopBtn">🛍 فروشگاه</button>
+    </div>
+  </div>
+
+  <div class="status" id="status" aria-live="polite"></div>
+
+  <div class="pad" aria-label="دکمه‌های جهت">
+    <button class="up" data-d="up" aria-label="بالا">▲</button>
+    <button class="left" data-d="left" aria-label="چپ">◀</button>
+    <button class="down" data-d="down" aria-label="پایین">▼</button>
+    <button class="right" data-d="right" aria-label="راست">▶</button>
+  </div>
+
+  <div class="legend"><span>🥃 ویسکی: +۱۰ امتیاز، +۲۵٪ مستی</span><span>🚬 سیگار: +۵ امتیاز، نفس کمتر و حرکت کندتر</span><span>💧 آب: −۳۵٪ مستی</span></div>
+  <p class="foot">فقط یه بازیه؛ مار واقعی نه ویسکی می‌خوره نه سیگار می‌کشه 🐍</p>
+
+<script>
+(() => {
+  const N = 20, S = 20;
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const fa = n => Number(n).toLocaleString('fa-IR');
+  const scoreEl = $('score'), bestEl = $('best'), drunkEl = $('drunk'), breathEl = $('breath'), statusEl = $('status');
+  const ov = $('ov'), ovTitle = $('ovTitle'), ovText = $('ovText'), startBtn = $('startBtn');
+
+  let best = 0;
+  try { best = parseInt(localStorage.getItem('marmast-best') || '0', 10) || 0; } catch (e) {}
+  bestEl.textContent = fa(best);
+
+  const SKINS = {
+    gray:    { name: 'سورتی', price: 0,   rim: '#55555b', base: '#85858c', mid: '#a3a3aa', hi: '#c9c9cf', spec: 'rgba(255,255,255,.8)', head: ['#e6e6eb', '#8d8d94', '#4a4a50'] },
+    black:   { name: 'مشکی کلاسیک', price: 60,  rim: '#8a8a92', base: '#08080a', mid: '#26262c', hi: '#4a4a54', spec: 'rgba(255,255,255,.55)', head: ['#6a6a75', '#16161a', '#050506'] },
+    ice:     { name: 'یخی', price: 100, rim: '#2f6f9a', base: '#4fa8e0', mid: '#7cc6f2', hi: '#bfe6fb', spec: 'rgba(255,255,255,.9)', head: ['#e9f7ff', '#5fb3e8', '#2f6f9a'], pat: 'dots', pc: 'rgba(255,255,255,.75)' },
+    neon:    { name: 'نئونی', price: 150, rim: '#06603a', base: '#0fbf6b', mid: '#2ee88a', hi: '#8bffc2', spec: '#eafff4', head: ['#d6ffe9', '#19d57a', '#06603a'], pat: 'stripes', pc: '#064d2e' },
+    gold:    { name: 'طلایی', price: 200, rim: '#7a5a10', base: '#c9971c', mid: '#e8b93a', hi: '#ffd964', spec: '#fff6cf', head: ['#fff0b0', '#d9a420', '#7a5a10'] },
+    lava:    { name: 'آتشین', price: 250, rim: '#6e1408', base: '#d8381c', mid: '#f0622b', hi: '#ffa04d', spec: '#ffe3b8', head: ['#ffd9a0', '#e5471f', '#6e1408'], pat: 'dots', pc: '#ffd24a' },
+    zandaii: { name: 'زندایی 🌸', price: 300, rim: '#8a2a52', base: '#e86a9a', mid: '#f48fb8', hi: '#ffc2da', spec: '#fff0f6', head: ['#ffe0ee', '#ec7aa6', '#8a2a52'], pat: 'flowers', pc: '#ffffff' }
+  };
+  Object.assign(SKINS.gray, { name: 'صورتی 💗', rim: '#b0396d', base: '#ff6fa5', mid: '#ff94bc', hi: '#ffc4da', spec: 'rgba(255,255,255,.9)', head: ['#ffe3ee', '#ff7fb0', '#b0396d'], pat: 'dots', pc: 'rgba(255,255,255,.7)', fx: 'hearts', ic: ['💗', '💗'] });
+  Object.assign(SKINS.black, { fx: 'wisp', ic: ['💨'] });
+  Object.assign(SKINS.ice, { glow: '#7cc6f2', fx: 'snow', ic: ['❄️', '❄️'] });
+  Object.assign(SKINS.neon, { glow: '#2ee88a', fx: 'spark', ic: ['⚡'] });
+  Object.assign(SKINS.gold, { glow: '#ffcf3a', fx: 'sparkle', ic: ['✨', '✨'] });
+  Object.assign(SKINS.lava, { name: 'آتشین 🔥', glow: '#ff6a1a', fx: 'fire', ic: ['🔥', '🔥', '🔥'] });
+  Object.assign(SKINS.zandaii, { name: 'زندایی 🌸', rim: '#4b1d6e', base: '#9b4fd1', mid: '#b878e6', hi: '#dcb4f7', spec: '#f6ebff', head: ['#efdcff', '#a45ad8', '#4b1d6e'], pat: 'flowers', pc: '#ffffff', fx: 'money', ic: ['💵', '💰', '🪙'] });
+
+  let fxp = [], fxAcc = 0;
+  function emitFx(fx, dt) {
+    fxAcc += dt * ({ fire: 60, money: 7, hearts: 6, wisp: 18, snow: 12, spark: 30, sparkle: 10 }[fx] || 10);
+    while (fxAcc >= 1) {
+      fxAcc -= 1;
+      const pool = fx === 'fire' ? snake.length : Math.min(snake.length, 6);
+      const sg = snake[Math.floor(Math.random() * pool)];
+      const R = Math.random;
+      const x = sg[0] * S + S / 2 + (R() - .5) * 8, y = sg[1] * S + S / 2 + (R() - .5) * 8;
+      if (fx === 'fire') fxp.push({ k: 'fire', x, y, vx: (R() - .5) * 14, vy: -30 - R() * 30, r: 4 + R() * 4, a: .9, fade: 1.6 });
+      else if (fx === 'money') fxp.push({ k: 'emoji', e: ['💵', '💰', '🪙', '💸'][Math.floor(R() * 4)], x, y, vx: (R() - .5) * 40, vy: -45 - R() * 25, g: 80, s: 12 + R() * 6, a: 1.3, fade: .6, rot: R() * 6, vr: (R() - .5) * 6 });
+      else if (fx === 'hearts') fxp.push({ k: 'emoji', e: '💗', x, y, vx: (R() - .5) * 12, vy: -22 - R() * 12, s: 9 + R() * 4, a: 1, fade: .7 });
+      else if (fx === 'wisp') fxp.push({ k: 'puff', x, y, vx: (R() - .5) * 10, vy: -12 - R() * 8, r: 3, gr: 5, a: .9, fade: 1 });
+      else if (fx === 'snow') fxp.push({ k: 'emoji', e: '❄️', x, y, vx: (R() - .5) * 14, vy: 12 + R() * 10, s: 8 + R() * 4, a: 1, fade: .6 });
+      else if (fx === 'spark') fxp.push({ k: 'dot', c: '46,232,138', x, y, vx: (R() - .5) * 60, vy: (R() - .5) * 60, r: 1.6 + R() * 1.4, a: .9, fade: 2 });
+      else if (fx === 'sparkle') fxp.push({ k: 'emoji', e: '✨', x, y, vx: 0, vy: -4, s: 9 + R() * 5, a: 1, fade: 1.2 });
+    }
+  }
+
+  let coins = 0, owned = ['gray'], skinId = 'gray';
+  try {
+    coins = parseInt(localStorage.getItem('marmast-coins') || '0', 10) || 0;
+    owned = JSON.parse(localStorage.getItem('marmast-owned') || '["gray"]');
+    skinId = localStorage.getItem('marmast-skin') || 'gray';
+  } catch (e) {}
+  if (!Array.isArray(owned) || !owned.includes('gray')) owned = ['gray'];
+  if (!SKINS[skinId] || !owned.includes(skinId)) skinId = 'gray';
+  function save() {
+    try {
+      localStorage.setItem('marmast-coins', String(coins));
+      localStorage.setItem('marmast-owned', JSON.stringify(owned));
+      localStorage.setItem('marmast-skin', skinId);
+    } catch (e) {}
+  }
+
+  const DIRS = { up: [0,-1], down: [0,1], left: [-1,0], right: [1,0] };
+  const FLIP = { up: 'down', down: 'up', left: 'right', right: 'left' };
+
+  let breath, breathCap, baseMs, snake, dir, queue, items, score, drunk, smokeT, hiccupT, nextHiccup, running, tickMs, acc, last, particles, t, statusT;
+
+  function reset() {
+    snake = [[10,10],[9,10],[8,10]];
+    dir = 'right'; queue = [];
+    items = []; score = 0; drunk = 0; smokeT = 0; hiccupT = 0; nextHiccup = 6;
+    baseMs = 140; breath = 100; breathCap = 100; tickMs = 140; acc = 0; particles = []; t = 0; statusT = 0;
+    spawn('whiskey'); spawn('cig');
+    updateHud(); say('');
+  }
+
+  function free(x, y) {
+    return !snake.some(s => s[0] === x && s[1] === y) && !items.some(i => i.x === x && i.y === y);
+  }
+  function spawn(type) {
+    for (let k = 0; k < 400; k++) {
+      const x = Math.floor(Math.random() * N), y = Math.floor(Math.random() * N);
+      if (free(x, y)) { items.push({ type, x, y }); return; }
+    }
+  }
+  function say(msg, sec = 2.2) { statusEl.textContent = msg; statusT = sec; }
+  function updateHud() {
+    scoreEl.textContent = fa(score);
+    drunkEl.style.width = Math.min(100, drunk) + '%';
+    breathEl.style.width = Math.max(0, breath) + '%';
+  }
+
+  function turn(d) {
+    const last = queue.length ? queue[queue.length - 1] : dir;
+    if (hiccupT > 0) d = FLIP[d];
+    if (d === last || d === FLIP[last]) return;
+    if (queue.length < 3) queue.push(d);
+  }
+
+  function step() {
+    if (queue.length) dir = queue.shift();
+    const [dx, dy] = DIRS[dir];
+    const head = [snake[0][0] + dx, snake[0][1] + dy];
+    if (head[0] < 0 || head[1] < 0 || head[0] >= N || head[1] >= N) return over('خوردی به دیوار!');
+    if (snake.some(s => s[0] === head[0] && s[1] === head[1])) return over('خودت را گاز گرفتی!');
+    snake.unshift(head);
+    const idx = items.findIndex(i => i.x === head[0] && i.y === head[1]);
+    if (idx >= 0) {
+      const it = items.splice(idx, 1)[0];
+      if (it.type === 'whiskey') {
+        score += 10; drunk += 25; say('هیک! یه ویسکی دیگه 🥃');
+        spawn('whiskey');
+        if (Math.random() < .5) spawn('water');
+      } else if (it.type === 'cig') {
+        score += 5; smokeT = 5; breathCap = Math.max(25, breathCap - 7); breath = Math.max(0, breath - 14); say('نفست کم شد... 🚬');
+        spawn('cig');
+      } else {
+        drunk = Math.max(0, drunk - 35); score += 2; say('یه کم هوشیار شدی 💧');
+      }
+      if (items.filter(i => i.type === 'water').length > 1) items = items.filter((i, k, a) => i.type !== 'water' || a.indexOf(i) === a.findIndex(j => j.type === 'water'));
+      baseMs = Math.max(80, baseMs - 2);
+      if (drunk >= 100) return over('مستی از حد گذشت؛ مار از هوش رفت! 😵');
+    } else {
+      snake.pop();
+    }
+    updateHud();
+  }
+
+  function over(msg) {
+    running = false;
+    if (score > best) { best = score; bestEl.textContent = fa(best); try { localStorage.setItem('marmast-best', String(best)); } catch (e) {} }
+    ovTitle.textContent = 'بازی تمام شد';
+    coins += score; save();
+    ovText.innerHTML = msg + '<br>امتیاز تو: ' + fa(score) + '<br>🪙 ' + fa(score) + ' سکه گرفتی (جمع: ' + fa(coins) + ')';
+    startBtn.textContent = 'دوباره';
+    ov.classList.remove('hide');
+    startBtn.focus();
+  }
+
+  function start() {
+    reset(); running = true; ov.classList.add('hide'); $('shop').classList.add('hide');
+    last = performance.now();
+  }
+
+  /* ---------- drawing ---------- */
+  function rr(x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  function drawSnake(g, pts, sk, w) {
+    w = w || 1;
+    g.save(); g.lineJoin = 'round'; g.lineCap = 'round';
+    const tr = (ox, oy) => { g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x + ox * w, y + oy * w) : g.moveTo(x + ox * w, y + oy * w)); };
+    tr(3, 4); g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 16 * w; g.stroke();
+    if (sk.glow) { g.shadowColor = sk.glow; g.shadowBlur = 14 * w; }
+    tr(0, 0); g.strokeStyle = sk.rim; g.lineWidth = 18 * w; g.stroke();
+    g.shadowBlur = 0;
+    tr(0, 0); g.strokeStyle = sk.base; g.lineWidth = 16 * w; g.stroke();
+    tr(-1.5, -1.5); g.strokeStyle = sk.mid; g.lineWidth = 10 * w; g.stroke();
+    tr(-2.5, -2.5); g.strokeStyle = sk.hi; g.lineWidth = 5 * w; g.stroke();
+    tr(-3, -3); g.strokeStyle = sk.spec; g.lineWidth = 1.8 * w; g.stroke();
+    if (sk.pat) {
+      pts.forEach(([x, y], i) => {
+        if (i < 1) return;
+        if (sk.pat === 'dots') {
+          g.fillStyle = sk.pc; g.beginPath(); g.arc(x - 1, y - 1, 2.4 * w, 0, 7); g.fill();
+        } else if (sk.pat === 'stripes') {
+          const a = pts[i - 1], b = pts[Math.min(i + 1, pts.length - 1)];
+          let dx = b[0] - a[0], dy = b[1] - a[1]; const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+          g.strokeStyle = sk.pc; g.lineWidth = 2.6 * w; g.beginPath();
+          g.moveTo(x - dy * 6 * w, y + dx * 6 * w); g.lineTo(x + dy * 6 * w, y - dx * 6 * w); g.stroke();
+        } else if (sk.pat === 'flowers') {
+          g.fillStyle = sk.pc;
+          for (let k = 0; k < 5; k++) { const an = k * 1.2566; g.beginPath(); g.arc(x + Math.cos(an) * 2.8 * w, y + Math.sin(an) * 2.8 * w, 2 * w, 0, 7); g.fill(); }
+          g.fillStyle = '#ffd24a'; g.beginPath(); g.arc(x, y, 1.8 * w, 0, 7); g.fill();
+        }
+      });
+    }
+    const hx0 = pts[0][0], hy0 = pts[0][1];
+    const hg = g.createRadialGradient(hx0 - 3 * w, hy0 - 3 * w, 1, hx0, hy0, 11 * w);
+    hg.addColorStop(0, sk.head[0]); hg.addColorStop(.5, sk.head[1]); hg.addColorStop(1, sk.head[2]);
+    g.fillStyle = hg; g.beginPath(); g.arc(hx0, hy0, 10.5 * w, 0, 7); g.fill();
+    g.restore();
+  }
+
+  function draw() {
+    // floor
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      ctx.fillStyle = (x + y) % 2 ? '#f0f0f0' : '#f9f9f9';
+      ctx.fillRect(x * S, y * S, S, S);
+    }
+    // items
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '17px sans-serif';
+    const bob = Math.sin(t * 4) * 1.5;
+    for (const it of items) {
+      const e = it.type === 'whiskey' ? '🥃' : it.type === 'cig' ? '🚬' : '💧';
+      ctx.fillText(e, it.x * S + S / 2, it.y * S + S / 2 + bob);
+    }
+    // snake body
+    drawSnake(ctx, snake.map(([x, y]) => [x * S + S / 2, y * S + S / 2]), SKINS[skinId]);
+    // head details
+    const [hx, hy] = snake[0];
+    const cx = hx * S + S / 2, cy = hy * S + S / 2;
+    const [dx, dy] = DIRS[dir];
+    const px = -dy, py = dx; // perpendicular
+    for (const side of [-1, 1]) {
+      const ex = cx + dx * 3 + px * 5 * side, ey = cy + dy * 3 + py * 5 * side;
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex, ey, 3.2, 0, 7); ctx.fill();
+      ctx.fillStyle = '#111';
+      if (drunk > 55) {
+        ctx.strokeStyle = '#111'; ctx.lineWidth = 1.2; ctx.beginPath();
+        for (let a = 0; a < 9; a += .5) { const r = a * .35; ctx.lineTo(ex + Math.cos(a + t * 6) * r, ey + Math.sin(a + t * 6) * r); }
+        ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.arc(ex + dx, ey + dy, 1.5, 0, 7); ctx.fill();
+      }
+    }
+    // tongue
+    if (Math.floor(t * 3) % 2 === 0) {
+      ctx.strokeStyle = '#ff4f7b'; ctx.lineWidth = 1.5; ctx.beginPath();
+      ctx.moveTo(cx + dx * 9, cy + dy * 9); ctx.lineTo(cx + dx * 15, cy + dy * 15); ctx.stroke();
+    }
+    // cigarette
+    if (smokeT > 0) {
+      const sx = cx + dx * 8 + px * 3, sy = cy + dy * 8 + py * 3;
+      const ex = sx + dx * 9, ey = sy + dy * 9;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#f6f0e4'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
+      ctx.strokeStyle = '#ff7a2b'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex + dx * 1.5, ey + dy * 1.5); ctx.stroke();
+      if (Math.random() < .55) particles.push({ x: ex, y: ey, vx: (Math.random() - .5) * 8, vy: -10 - Math.random() * 10, r: 2 + Math.random() * 2, a: .55 });
+    }
+    // smoke particles
+    for (const p of particles) {
+      ctx.fillStyle = `rgba(210,210,215,${p.a})`;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+    }
+    for (const p of fxp) {
+      const al = Math.max(0, Math.min(1, p.a));
+      if (p.k === 'fire') { ctx.fillStyle = `rgba(255,${Math.floor(70 + 170 * al)},20,${al * .85})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (.4 + al * .6), 0, 7); ctx.fill(); }
+      else if (p.k === 'puff') { ctx.fillStyle = `rgba(60,60,70,${al * .3})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }
+      else if (p.k === 'dot') { ctx.fillStyle = `rgba(${p.c},${al})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }
+      else { ctx.save(); ctx.globalAlpha = al; ctx.translate(p.x, p.y); ctx.rotate(p.rot || 0); ctx.font = p.s + 'px sans-serif'; ctx.fillText(p.e, 0, 0); ctx.restore(); }
+    }
+    // haze
+    if (smokeT > 0 || particles.length) {
+      const h = Math.min(.38, smokeT / 5 * .38);
+      ctx.fillStyle = `rgba(180,180,190,${h})`; ctx.fillRect(0, 0, 400, 400);
+    }
+  }
+
+  function applyDrunkFx() {
+    const d = Math.min(100, drunk) / 100;
+    const sway = Math.sin(t * 1.7) * d * 5;
+    cv.style.transform = `rotate(${sway}deg) translateX(${Math.sin(t * 2.3) * d * 6}px)`;
+    cv.style.filter = d > .3 ? `blur(${(d - .3) * 2.2}px) saturate(${1 + d * .6})` : 'none';
+  }
+
+  function frame(now) {
+    const dt = Math.min(.1, (now - (last || now)) / 1000); last = now;
+    t += dt;
+    if (running) {
+      acc += dt * 1000;
+      while (acc >= tickMs && running) { acc -= tickMs; step(); }
+      drunk = Math.max(0, drunk - 2 * dt);
+      if (smokeT > 0) smokeT = Math.max(0, smokeT - dt);
+      nextHiccup -= dt;
+      if (drunk > 70 && nextHiccup <= 0) { hiccupT = 2.2; nextHiccup = 7 + Math.random() * 4; say('سکسکه! کنترل برعکس شد 🙃', 2.2); }
+      if (hiccupT > 0) hiccupT = Math.max(0, hiccupT - dt);
+      if (statusT > 0 && (statusT -= dt) <= 0) statusEl.textContent = '';
+      if (smokeT > 0) breath = Math.max(0, breath - 3 * dt);
+      breath = Math.min(breathCap, breath + 1.5 * dt);
+      tickMs = baseMs + (100 - breath) * 1.6;
+      breathEl.style.width = Math.max(0, breath) + '%';
+      drunkEl.style.width = Math.min(100, drunk) + '%';
+    }
+    for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.r += dt * 3; p.a -= dt * .3; }
+    particles = particles.filter(p => p.a > 0);
+    const curFx = SKINS[skinId].fx;
+    if (curFx && running) emitFx(curFx, dt);
+    for (const p of fxp) { p.x += p.vx * dt; p.y += p.vy * dt; if (p.g) p.vy += p.g * dt; if (p.gr) p.r += p.gr * dt; if (p.vr) p.rot = (p.rot || 0) + p.vr * dt; p.a -= dt * (p.fade || 1); }
+    fxp = fxp.filter(p => p.a > 0);
+    draw(); applyDrunkFx();
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- input ---------- */
+  const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
+  addEventListener('keydown', e => {
+    if (KEYS[e.key]) { e.preventDefault(); if (running) turn(KEYS[e.key]); }
+    else if ((e.key === ' ' || e.key === 'Enter') && !running && document.activeElement.tagName !== 'BUTTON') { e.preventDefault(); start(); }
+  });
+  document.querySelectorAll('.pad button').forEach(b => b.addEventListener('click', () => running && turn(b.dataset.d)));
+  startBtn.addEventListener('click', start);
+
+  let tx = 0, ty = 0;
+  const stage = $('stage');
+  stage.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+  stage.addEventListener('touchend', e => {
+    if (!running) return;
+    const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+    turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+  }, { passive: true });
+
+  const shopEl = $('shop'), listEl = $('list'), coinsEl = $('coins');
+  function renderShop() {
+    coinsEl.textContent = fa(coins);
+    listEl.innerHTML = '';
+    Object.entries(SKINS).forEach(([id, sk]) => {
+      const row = document.createElement('div'); row.className = 'row';
+      const c = document.createElement('canvas'); c.width = 192; c.height = 80;
+      const g = c.getContext('2d');
+      g.scale(2, 2);
+      g.fillStyle = '#f6f6f6'; g.fillRect(0, 0, 96, 40);
+      drawSnake(g, [[80, 20], [62, 20], [44, 20], [26, 20], [12, 20]], sk, 1);
+      g.fillStyle = '#fff'; g.beginPath(); g.arc(83, 16, 2.4, 0, 7); g.arc(83, 24, 2.4, 0, 7); g.fill();
+      g.fillStyle = '#111'; g.beginPath(); g.arc(84, 16, 1.2, 0, 7); g.arc(84, 24, 1.2, 0, 7); g.fill();
+      if (sk.ic) { g.font = '11px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; sk.ic.forEach((e, i) => g.fillText(e, 22 + i * 22, 6 + (i % 2) * 28)); }
+      const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = sk.name;
+      const b = document.createElement('button'); b.className = 'go';
+      if (owned.includes(id)) {
+        b.textContent = skinId === id ? 'انتخاب‌شده ✓' : 'انتخاب';
+        b.disabled = skinId === id;
+        b.onclick = () => { skinId = id; save(); renderShop(); };
+      } else {
+        b.textContent = 'خرید 🪙 ' + fa(sk.price);
+        b.disabled = coins < sk.price;
+        b.onclick = () => { coins -= sk.price; owned.push(id); skinId = id; save(); renderShop(); };
+      }
+      row.append(c, nm, b); listEl.appendChild(row);
+    });
+  }
+  $('shopBtn').addEventListener('click', () => { renderShop(); ov.classList.add('hide'); shopEl.classList.remove('hide'); });
+  $('backBtn').addEventListener('click', () => { shopEl.classList.add('hide'); ov.classList.remove('hide'); });
+
+  reset(); running = false;
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
